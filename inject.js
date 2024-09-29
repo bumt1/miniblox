@@ -1163,53 +1163,61 @@ function modifyCode(text) {
 		execute(publicUrl);
 	}
 })();
-// Fly Module (with Anti-Cheat Bypass)
+// Fly Module
 let flySpeed, flyVerticalSpeed, flyBypass;
-const fly = new Module("Fly", function (enabled) {
-    if (enabled) {
-        tickLoop["Fly"] = function () {
-            let direction = getMoveDirection(flySpeed[1]);
+const fly = new Module("Fly", function(callback) {
+    if (callback) {
+        let ticks = 0;
+        tickLoop["Fly"] = function() {
+            ticks++;
+            const direction = getMoveDirection(flySpeed[1]);
             player$1.motion.x = direction.x;
             player$1.motion.z = direction.z;
             player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
-
-            if (flyBypass[1]) {
-                player$1.motion.x *= 0.98; // reduce motion to avoid anti-cheat detection
-                player$1.motion.z *= 0.98;
-            }
         };
     } else {
         delete tickLoop["Fly"];
+        if (player$1) {
+            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
+            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+        }
     }
 });
 flySpeed = fly.addoption("Speed", Number, 2);
-flyVerticalSpeed = fly.addoption("Vertical Speed", Number, 0.7);
+flyVerticalSpeed = fly.addoption("Vertical", Number, 0.7);
 flyBypass = fly.addoption("Bypass", Boolean, true);
 
 // FastFly Module
 let fastFlySpeed, fastFlyVerticalSpeed;
-const fastFly = new Module("FastFly", function (enabled) {
-    if (enabled) {
-        tickLoop["FastFly"] = function () {
-            let direction = getMoveDirection(1.5 * fastFlySpeed[1]); // faster than Fly
+const fastFly = new Module("FastFly", function(callback) {
+    if (callback) {
+        let ticks = 0;
+        tickLoop["FastFly"] = function() {
+            ticks++;
+            const direction = getMoveDirection(1.5 * fastFlySpeed[1]); // faster than Fly
             player$1.motion.x = direction.x;
             player$1.motion.z = direction.z;
             player$1.motion.y = keyPressedDump("space") ? fastFlyVerticalSpeed[1] : (keyPressedDump("shift") ? -fastFlyVerticalSpeed[1] : 0);
         };
     } else {
         delete tickLoop["FastFly"];
+        if (player$1) {
+            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.4), -0.4);
+            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.4), -0.4);
+        }
     }
 });
 fastFlySpeed = fastFly.addoption("Speed", Number, 3); // Faster than Fly
-fastFlyVerticalSpeed = fastFly.addoption("Vertical Speed", Number, 1); // Faster vertical speed than Fly
+fastFlyVerticalSpeed = fastFly.addoption("Vertical Speed", Number, 1);
 
 // TPAura Module
-const tpAura = new Module("TPAura", function (enabled) {
-    if (enabled) {
-        let originalPosition = player$1.pos.clone();
-        tickLoop["TPAura"] = function () {
-            let nearestEnemy = getNearestEnemy();
+let tpAuraRange;
+const tpAura = new Module("TPAura", function(callback) {
+    if (callback) {
+        tickLoop["TPAura"] = function() {
+            let nearestEnemy = getNearestEnemy(tpAuraRange[1]);
             if (nearestEnemy) {
+                let originalPosition = player$1.pos.clone();
                 player$1.setPositionAndRotation(nearestEnemy.pos.x, nearestEnemy.pos.y, nearestEnemy.pos.z, nearestEnemy.yaw, nearestEnemy.pitch);
                 attackEntity(nearestEnemy);
                 player$1.setPositionAndRotation(originalPosition.x, originalPosition.y, originalPosition.z, player$1.yaw, player$1.pitch);
@@ -1219,10 +1227,11 @@ const tpAura = new Module("TPAura", function (enabled) {
         delete tickLoop["TPAura"];
     }
 });
+tpAuraRange = tpAura.addoption("Range", Number, 8);
 
-function getNearestEnemy() {
+function getNearestEnemy(range) {
     let nearestEnemy = null;
-    let minDist = Infinity;
+    let minDist = range * range;
     for (const entity of game$1.world.entitiesDump.values()) {
         if (entity != player$1 && entity instanceof EntityPlayer && !entity.isInvisibleDump()) {
             let dist = player$1.getDistanceSqToEntity(entity);
@@ -1235,23 +1244,11 @@ function getNearestEnemy() {
     return nearestEnemy;
 }
 
-// List all modules (make sure Fly, FastFly, and TPAura are included in the .modules command output)
-const moduleList = {
-    Fly: fly,
-    FastFly: fastFly,
-    TPAura: tpAura,
-    // ... other existing modules
-};
-
-new Module("Fly", function() {}); // Added to the module list
-new Module("FastFly", function() {}); // Added to the module list
-new Module("TPAura", function() {}); // Added to the module list
-
-// Ensure modules are displayed correctly in the .modules command
+// Ensure modules show up in .modules command output
 window.addEventListener("keydown", function(event) {
     if (event.key === ".modules") {
         let output = "Available Modules:\n";
-        for (const moduleName in moduleList) {
+        for (const moduleName in modules) {
             output += moduleName + "\n";
         }
         game$1.chat.addChat({ text: output });
