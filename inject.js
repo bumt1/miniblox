@@ -1163,7 +1163,7 @@ function modifyCode(text) {
 		execute(publicUrl);
 	}
 })();
-// Improved Fly with Anti-Cheat Bypass
+// Fly Module (with Anti-Cheat Bypass)
 let flySpeed, flyVerticalSpeed, flyBypass;
 const fly = new Module("Fly", function (enabled) {
     if (enabled) {
@@ -1186,19 +1186,22 @@ flySpeed = fly.addoption("Speed", Number, 2);
 flyVerticalSpeed = fly.addoption("Vertical Speed", Number, 0.7);
 flyBypass = fly.addoption("Bypass", Boolean, true);
 
-// FastFly (same as Fly but with a higher speed)
+// FastFly Module
+let fastFlySpeed, fastFlyVerticalSpeed;
 const fastFly = new Module("FastFly", function (enabled) {
     if (enabled) {
         tickLoop["FastFly"] = function () {
-            let direction = getMoveDirection(1.2 * flySpeed[1]); // increase speed multiplier
+            let direction = getMoveDirection(1.5 * fastFlySpeed[1]); // faster than Fly
             player$1.motion.x = direction.x;
             player$1.motion.z = direction.z;
-            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
+            player$1.motion.y = keyPressedDump("space") ? fastFlyVerticalSpeed[1] : (keyPressedDump("shift") ? -fastFlyVerticalSpeed[1] : 0);
         };
     } else {
         delete tickLoop["FastFly"];
     }
 });
+fastFlySpeed = fastFly.addoption("Speed", Number, 3); // Faster than Fly
+fastFlyVerticalSpeed = fastFly.addoption("Vertical Speed", Number, 1); // Faster vertical speed than Fly
 
 // TPAura Module
 const tpAura = new Module("TPAura", function (enabled) {
@@ -1231,3 +1234,26 @@ function getNearestEnemy() {
     }
     return nearestEnemy;
 }
+
+// List all modules (make sure Fly, FastFly, and TPAura are included in the .modules command output)
+const moduleList = {
+    Fly: fly,
+    FastFly: fastFly,
+    TPAura: tpAura,
+    // ... other existing modules
+};
+
+new Module("Fly", function() {}); // Added to the module list
+new Module("FastFly", function() {}); // Added to the module list
+new Module("TPAura", function() {}); // Added to the module list
+
+// Ensure modules are displayed correctly in the .modules command
+window.addEventListener("keydown", function(event) {
+    if (event.key === ".modules") {
+        let output = "Available Modules:\n";
+        for (const moduleName in moduleList) {
+            output += moduleName + "\n";
+        }
+        game$1.chat.addChat({ text: output });
+    }
+});
