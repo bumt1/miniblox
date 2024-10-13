@@ -764,26 +764,60 @@ function modifyCode(text) {
 
 // Fast Fly
 new Module("FastFly", function() {});
+// Fast Fly
 let fastflyvalue, fastflyvert;
+let lastPosition;
+
 const fastfly = new Module("FastFly", function(callback) {
     if (callback) {
+        let ticks = 0;
         tickLoop["FastFly"] = function() {
-            const dir = getMoveDirection(5);  // Set the speed to 5
+            ticks++;
+            const dir = getMoveDirection(fastflyvalue[1]);  // Set speed dynamically
             player$1.motion.x = dir.x;
             player$1.motion.z = dir.z;
             player$1.motion.y = keyPressedDump("space") ? fastflyvert[1] : (keyPressedDump("shift") ? -fastflyvert[1] : 0);
+            
+            // Bypass techniques to reduce detection
+            if (ticks % 5 === 0) {
+                // Randomly adjust motion to avoid pattern detection
+                player$1.motion.x += (Math.random() - 0.5) * 0.05;
+                player$1.motion.z += (Math.random() - 0.5) * 0.05;
+            }
         };
+
+        // Store the player's position when FastFly is enabled
+        lastPosition = { x: player$1.pos.x, y: player$1.pos.y, z: player$1.pos.z };
+
     } else {
-        delete tickLoop["FastFly"];
+        // When disabling Fast Fly, make the player stuck for 1 second
+        const disableTime = Date.now() + 1000;  // 1 second delay
+        tickLoop["FastFlyDisable"] = function() {
+            if (Date.now() < disableTime) {
+                // Teleport the player back to the last known position for 1 second
+                player$1.setPositionAndRotation(lastPosition.x, lastPosition.y, lastPosition.z, player$1.yaw, player$1.pitch);
+                player$1.motion.x = 0;
+                player$1.motion.z = 0;
+            } else {
+                // After 1 second, remove the tick loop
+                delete tickLoop["FastFlyDisable"];
+            }
+        };
+
+        // Reset player movement to avoid large speed after disabling
         if (player$1) {
             player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
             player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
         }
+
+        // Cleanup the tick loop when Fast Fly is disabled
+        delete tickLoop["FastFly"];
     }
 });
-fastflyvalue = fastfly.addoption("Speed", Number, 5);  // Default fast fly speed set to 5
-fastflyvert = fastfly.addoption("Vertical", Number, 0.7);
 
+// Dynamic speed adjustment with the .setoption command
+fastflyvalue = fastfly.addoption("Speed", Number, 5);  // Default speed set to 5
+fastflyvert = fastfly.addoption("Vertical", Number, 0.7);
 
 			// NoFall
 			new Module("NoFall", function(callback) {
