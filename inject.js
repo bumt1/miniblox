@@ -764,7 +764,6 @@ function modifyCode(text) {
 
 // Fast Fly
 new Module("FastFly", function() {});
-// Fast Fly
 let fastflyvalue, fastflyvert;
 let lastPosition;
 
@@ -773,16 +772,24 @@ const fastfly = new Module("FastFly", function(callback) {
         let ticks = 0;
         tickLoop["FastFly"] = function() {
             ticks++;
-            const dir = getMoveDirection(fastflyvalue[1]);  // Set speed dynamically
+            
+            // Get the current movement direction with the dynamic speed from fastflyvalue
+            const dir = getMoveDirection(fastflyvalue[1]);
             player$1.motion.x = dir.x;
             player$1.motion.z = dir.z;
             player$1.motion.y = keyPressedDump("space") ? fastflyvert[1] : (keyPressedDump("shift") ? -fastflyvert[1] : 0);
-            
-            // Bypass techniques to reduce detection
+
+            // Bypass techniques for anti-cheat evasion
             if (ticks % 5 === 0) {
-                // Randomly adjust motion to avoid pattern detection
+                // Slight random changes in motion to prevent pattern detection
                 player$1.motion.x += (Math.random() - 0.5) * 0.05;
                 player$1.motion.z += (Math.random() - 0.5) * 0.05;
+            }
+
+            if (ticks % 30 === 0) {
+                // Randomly pause motion every few ticks to mimic more natural behavior
+                player$1.motion.x *= 0.95;
+                player$1.motion.z *= 0.95;
             }
         };
 
@@ -790,7 +797,7 @@ const fastfly = new Module("FastFly", function(callback) {
         lastPosition = { x: player$1.pos.x, y: player$1.pos.y, z: player$1.pos.z };
 
     } else {
-        // When disabling Fast Fly, make the player stuck for 1 second
+        // When disabling Fast Fly, make the player stuck for 1 second by locking position
         const disableTime = Date.now() + 1000;  // 1 second delay
         tickLoop["FastFlyDisable"] = function() {
             if (Date.now() < disableTime) {
@@ -804,7 +811,7 @@ const fastfly = new Module("FastFly", function(callback) {
             }
         };
 
-        // Reset player movement to avoid large speed after disabling
+        // Reset player motion to avoid unnatural large speed after disabling
         if (player$1) {
             player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
             player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
@@ -815,9 +822,53 @@ const fastfly = new Module("FastFly", function(callback) {
     }
 });
 
+// TP Aura
+let tpauraRange;
+
+const tpaura = new Module("TPAura", function(callback) {
+    if (callback) {
+        tickLoop["TPAura"] = function() {
+            const entities = game$1.world.entitiesDump;
+            const localPos = player$1.pos.clone();
+
+            for (const entity of entities.values()) {
+                if (entity.id === player$1.id) continue;  // Skip the player itself
+
+                const distance = player$1.getDistanceSqToEntity(entity);
+
+                // If the entity is within range, teleport to it
+                if (distance < (tpauraRange[1] * tpauraRange[1])) {
+                    player$1.setPositionAndRotation(entity.pos.x, entity.pos.y, entity.pos.z, player$1.yaw, player$1.pitch);
+                    
+                    // Bypass technique: Add a slight delay before the next teleport
+                    setTimeout(() => {
+                        // Small random adjustments in position to reduce pattern detection
+                        player$1.setPositionAndRotation(
+                            entity.pos.x + (Math.random() - 0.5) * 0.5,
+                            entity.pos.y,
+                            entity.pos.z + (Math.random() - 0.5) * 0.5,
+                            player$1.yaw, player$1.pitch
+                        );
+                    }, 100 + Math.random() * 200);  // Randomized delay to avoid consistent timing
+
+                    break;  // Teleport to one entity per tick
+                }
+            }
+        };
+    } else {
+        delete tickLoop["TPAura"];  // Cleanup when the module is disabled
+    }
+});
+
+// Add a range option for TPAura
+tpauraRange = tpaura.addoption("Range", Number, 50);  // Default range is 50 units
+
+
 // Dynamic speed adjustment with the .setoption command
-fastflyvalue = fastfly.addoption("Speed", Number, 5);  // Default speed set to 5
-fastflyvert = fastfly.addoption("Vertical", Number, 0.7);
+fastflyvalue = fastfly.addoption("Speed", Number, 5);  // Default speed is set to 5
+fastflyvert = fastfly.addoption("Vertical", Number, 0.7);  // Default vertical speed
+
+
 
 			// NoFall
 			new Module("NoFall", function(callback) {
