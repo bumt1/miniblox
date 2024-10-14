@@ -762,58 +762,6 @@ function modifyCode(text) {
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});
 
-// Fast Fly
-let flySpeed, flyVerticalSpeed, flyBypass, noSlowdown, lastFlyPosition;
-const fly = new Module("Fly", function (enabled) {
-    if (enabled) {
-        // Store the position when Fly is enabled
-        lastFlyPosition = null;  // Clear previous stored position
-        tickLoop["Fly"] = function () {
-            let direction = getMoveDirection(flySpeed[1]);
-            player$1.motion.x = direction.x;
-            player$1.motion.z = direction.z;
-            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
-
-            // NoSlowdown logic when disabled
-            if (!noSlowdown[1]) {
-                player$1.motion.x *= 0.98; // Slow down movement when NoSlowdown is off
-                player$1.motion.z *= 0.98;
-            }
-
-            // Bypass to reduce anti-cheat detection
-            if (flyBypass[1]) {
-                player$1.motion.x *= 0.98;
-                player$1.motion.z *= 0.98;
-            }
-        };
-    } else {
-        // Store the player's current position when Fly is disabled
-        lastFlyPosition = {
-            x: player$1.pos.x,
-            y: player$1.pos.y,
-            z: player$1.pos.z
-        };
-
-        // Teleport the player to the last position (where Fly was disabled)
-        if (lastFlyPosition) {
-            player$1.setPositionAndRotation(lastFlyPosition.x, lastFlyPosition.y, lastFlyPosition.z, player$1.yaw, player$1.pitch);
-        }
-
-        // Smooth transition when disabling Fly
-        if (player$1) {
-            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
-            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
-        }
-
-        delete tickLoop["Fly"];
-    }
-});
-flySpeed = fly.addoption("Speed", Number, 2);
-flyVerticalSpeed = fly.addoption("Vertical Speed", Number, 0.7);
-flyBypass = fly.addoption("Bypass", Boolean, true);
-noSlowdown = fly.addoption("NoSlowdown", Boolean, true);
-
-
 
 
 // TP Aura
@@ -878,6 +826,64 @@ fastflyvert = fastfly.addoption("Vertical", Number, 0.7);  // Default vertical s
 				}
 				else delete tickLoop["NoFall"];
 			});
+
+   let flySpeed, flyVerticalSpeed, flyBypass, noSlowdown, lastPosition;
+const fly = new Module("Fly", function (enabled) {
+    if (enabled) {
+        // Clear stored position when Fly is enabled
+        lastPosition = null;
+
+        tickLoop["Fly"] = function () {
+            // Calculate movement direction based on fly speed
+            let direction = getMoveDirection(flySpeed[1]);
+            player$1.motion.x = direction.x;
+            player$1.motion.z = direction.z;
+            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
+
+            // Apply slowdown if NoSlowdown is disabled
+            if (!noSlowdown[1]) {
+                player$1.motion.x *= 0.98;
+                player$1.motion.z *= 0.98;
+            }
+
+            // Bypass logic to reduce detection by anti-cheat systems
+            if (flyBypass[1]) {
+                player$1.motion.x *= 0.98;
+                player$1.motion.z *= 0.98;
+            }
+        };
+    } else {
+        // Store the current position when Fly is disabled
+        lastPosition = {
+            x: player$1.pos.x,
+            y: player$1.pos.y,
+            z: player$1.pos.z
+        };
+
+        // Teleport the player to the stored position (where Fly was disabled)
+        if (lastPosition) {
+            player$1.setPositionAndRotation(lastPosition.x, lastPosition.y, lastPosition.z, player$1.yaw, player$1.pitch);
+        }
+
+        // Smooth transition to avoid abrupt motion
+        if (player$1) {
+            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
+            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+        }
+
+        // Remove Fly logic when Fly is disabled
+        delete tickLoop["Fly"];
+    }
+});
+
+// Fly module options
+flySpeed = fly.addoption("Speed", Number, 2);
+flyVerticalSpeed = fly.addoption("Vertical Speed", Number, 0.7);
+flyBypass = fly.addoption("Bypass", Boolean, true);
+noSlowdown = fly.addoption("NoSlowdown", Boolean, true);
+
+
+
 
 			// Speed
 			let speedvalue, speedjump, speedauto;
