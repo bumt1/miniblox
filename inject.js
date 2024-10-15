@@ -777,6 +777,62 @@ function modifyCode(text) {
 				else delete tickLoop["NoFall"];
 			});
 
+// FastFly
+new Module("FastFly", function(callback) {
+    if (callback) {
+        // Clear last position when FastFly is enabled
+        lastPosition = null;
+
+        tickLoop["FastFly"] = function() {
+            // Calculate movement direction based on fly speed
+            let direction = getMoveDirection(fastFlySpeed[1]);
+            player$1.motion.x = direction.x;
+            player$1.motion.z = direction.z;
+            player$1.motion.y = keyPressedDump("space") ? fastFlyVerticalSpeed[1] : (keyPressedDump("shift") ? -fastFlyVerticalSpeed[1] : 0);
+
+            // Apply slowdown if NoSlowdown is disabled
+            if (!noSlowdown[1]) {
+                player$1.motion.x *= 0.98;
+                player$1.motion.z *= 0.98;
+            }
+
+            // Bypass logic to reduce detection by anti-cheat systems
+            if (fastFlyBypass[1]) {
+                player$1.motion.x *= 0.98;
+                player$1.motion.z *= 0.98;
+            }
+        };
+    } else {
+        // Store the player's current position when FastFly is disabled
+        lastPosition = {
+            x: player$1.pos.x,
+            y: player$1.pos.y,
+            z: player$1.pos.z
+        };
+
+        // Teleport the player to the stored position (where FastFly was disabled)
+        if (lastPosition) {
+            player$1.setPositionAndRotation(lastPosition.x, lastPosition.y, lastPosition.z, player$1.yaw, player$1.pitch);
+        }
+
+        // Smooth transition to avoid abrupt motion
+        if (player$1) {
+            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
+            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+        }
+
+        // Remove FastFly logic when disabled
+        delete tickLoop["FastFly"];
+    }
+});
+
+// FastFly module options
+fastFlySpeed = fastFly.addoption("Speed", Number, 2);
+fastFlyVerticalSpeed = fastFly.addoption("Vertical Speed", Number, 0.7);
+fastFlyBypass = fastFly.addoption("Bypass", Boolean, true);
+noSlowdown = fastFly.addoption("NoSlowdown", Boolean, true);
+
+
 			// Speed
 			let speedvalue, speedjump, speedauto;
 			const speed = new Module("Speed", function(callback) {
@@ -1163,71 +1219,3 @@ function modifyCode(text) {
 		execute(publicUrl);
 	}
 })();
-// Improved Fly with Anti-Cheat Bypass
-let flySpeed, flyVerticalSpeed, flyBypass;
-const fly = new Module("Fly", function (enabled) {
-    if (enabled) {
-        tickLoop["Fly"] = function () {
-            let direction = getMoveDirection(flySpeed[1]);
-            player$1.motion.x = direction.x;
-            player$1.motion.z = direction.z;
-            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
-
-            if (flyBypass[1]) {
-                player$1.motion.x *= 0.98; // reduce motion to avoid anti-cheat detection
-                player$1.motion.z *= 0.98;
-            }
-        };
-    } else {
-        delete tickLoop["Fly"];
-    }
-});
-flySpeed = fly.addoption("Speed", Number, 2);
-flyVerticalSpeed = fly.addoption("Vertical Speed", Number, 0.7);
-flyBypass = fly.addoption("Bypass", Boolean, true);
-
-// FastFly (same as Fly but with a higher speed)
-const fastFly = new Module("FastFly", function (enabled) {
-    if (enabled) {
-        tickLoop["FastFly"] = function () {
-            let direction = getMoveDirection(1.2 * flySpeed[1]); // increase speed multiplier
-            player$1.motion.x = direction.x;
-            player$1.motion.z = direction.z;
-            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
-        };
-    } else {
-        delete tickLoop["FastFly"];
-    }
-});
-
-// TPAura Module
-const tpAura = new Module("TPAura", function (enabled) {
-    if (enabled) {
-        let originalPosition = player$1.pos.clone();
-        tickLoop["TPAura"] = function () {
-            let nearestEnemy = getNearestEnemy();
-            if (nearestEnemy) {
-                player$1.setPositionAndRotation(nearestEnemy.pos.x, nearestEnemy.pos.y, nearestEnemy.pos.z, nearestEnemy.yaw, nearestEnemy.pitch);
-                attackEntity(nearestEnemy);
-                player$1.setPositionAndRotation(originalPosition.x, originalPosition.y, originalPosition.z, player$1.yaw, player$1.pitch);
-            }
-        };
-    } else {
-        delete tickLoop["TPAura"];
-    }
-});
-
-function getNearestEnemy() {
-    let nearestEnemy = null;
-    let minDist = Infinity;
-    for (const entity of game$1.world.entitiesDump.values()) {
-        if (entity != player$1 && entity instanceof EntityPlayer && !entity.isInvisibleDump()) {
-            let dist = player$1.getDistanceSqToEntity(entity);
-            if (dist < minDist) {
-                minDist = dist;
-                nearestEnemy = entity;
-            }
-        }
-    }
-    return nearestEnemy;
-}
