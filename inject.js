@@ -826,62 +826,6 @@ fastflyvert = fastfly.addoption("Vertical", Number, 0.7);  // Default vertical s
 				}
 				else delete tickLoop["NoFall"];
 			});
-// FAST FLY
-
-let fastFlySpeed, fastFlyVerticalSpeed, fastFlyBypass, noSlowdown, lastPosition;
-const fastFly = new Module("FastFly", function (enabled) {
-    if (enabled) {
-        // Clear stored position when FastFly is enabled
-        lastPosition = null;
-
-        tickLoop["FastFly"] = function () {
-            // Calculate movement direction based on fly speed
-            let direction = getMoveDirection(fastFlySpeed[1]);
-            player$1.motion.x = direction.x;
-            player$1.motion.z = direction.z;
-            player$1.motion.y = keyPressedDump("space") ? fastFlyVerticalSpeed[1] : (keyPressedDump("shift") ? -fastFlyVerticalSpeed[1] : 0);
-
-            // Apply slowdown if NoSlowdown is disabled
-            if (!noSlowdown[1]) {
-                player$1.motion.x *= 0.98;
-                player$1.motion.z *= 0.98;
-            }
-
-            // Bypass logic to reduce detection by anti-cheat systems
-            if (fastFlyBypass[1]) {
-                player$1.motion.x *= 0.98;
-                player$1.motion.z *= 0.98;
-            }
-        };
-    } else {
-        // Store the current position when FastFly is disabled
-        lastPosition = {
-            x: player$1.pos.x,
-            y: player$1.pos.y,
-            z: player$1.pos.z
-        };
-
-        // Teleport the player to the stored position (where FastFly was disabled)
-        if (lastPosition) {
-            player$1.setPositionAndRotation(lastPosition.x, lastPosition.y, lastPosition.z, player$1.yaw, player$1.pitch);
-        }
-
-        // Smooth transition to avoid abrupt motion
-        if (player$1) {
-            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
-            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
-        }
-
-        // Remove FastFly logic when FastFly is disabled
-        delete tickLoop["FastFly"];
-    }
-});
-
-// FastFly module options
-fastFlySpeed = fastFly.addoption("Speed", Number, 2);
-fastFlyVerticalSpeed = fastFly.addoption("Vertical Speed", Number, 0.7);
-fastFlyBypass = fastFly.addoption("Bypass", Boolean, true);
-noSlowdown = fastFly.addoption("NoSlowdown", Boolean, true);
 
 
 
