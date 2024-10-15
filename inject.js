@@ -826,19 +826,20 @@ fastflyvert = fastfly.addoption("Vertical", Number, 0.7);  // Default vertical s
 				}
 				else delete tickLoop["NoFall"];
 			});
+// FAST FLY
 
-   let flySpeed, flyVerticalSpeed, flyBypass, noSlowdown, lastPosition;
-const fly = new Module("Fly", function (enabled) {
+let fastFlySpeed, fastFlyVerticalSpeed, fastFlyBypass, noSlowdown, lastPosition;
+const fastFly = new Module("FastFly", function (enabled) {
     if (enabled) {
-        // Clear stored position when Fly is enabled
+        // Clear stored position when FastFly is enabled
         lastPosition = null;
 
-        tickLoop["Fly"] = function () {
+        tickLoop["FastFly"] = function () {
             // Calculate movement direction based on fly speed
-            let direction = getMoveDirection(flySpeed[1]);
+            let direction = getMoveDirection(fastFlySpeed[1]);
             player$1.motion.x = direction.x;
             player$1.motion.z = direction.z;
-            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
+            player$1.motion.y = keyPressedDump("space") ? fastFlyVerticalSpeed[1] : (keyPressedDump("shift") ? -fastFlyVerticalSpeed[1] : 0);
 
             // Apply slowdown if NoSlowdown is disabled
             if (!noSlowdown[1]) {
@@ -847,20 +848,20 @@ const fly = new Module("Fly", function (enabled) {
             }
 
             // Bypass logic to reduce detection by anti-cheat systems
-            if (flyBypass[1]) {
+            if (fastFlyBypass[1]) {
                 player$1.motion.x *= 0.98;
                 player$1.motion.z *= 0.98;
             }
         };
     } else {
-        // Store the current position when Fly is disabled
+        // Store the current position when FastFly is disabled
         lastPosition = {
             x: player$1.pos.x,
             y: player$1.pos.y,
             z: player$1.pos.z
         };
 
-        // Teleport the player to the stored position (where Fly was disabled)
+        // Teleport the player to the stored position (where FastFly was disabled)
         if (lastPosition) {
             player$1.setPositionAndRotation(lastPosition.x, lastPosition.y, lastPosition.z, player$1.yaw, player$1.pitch);
         }
@@ -871,17 +872,16 @@ const fly = new Module("Fly", function (enabled) {
             player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
         }
 
-        // Remove Fly logic when Fly is disabled
-        delete tickLoop["Fly"];
+        // Remove FastFly logic when FastFly is disabled
+        delete tickLoop["FastFly"];
     }
 });
 
-// Fly module options
-flySpeed = fly.addoption("Speed", Number, 2);
-flyVerticalSpeed = fly.addoption("Vertical Speed", Number, 0.7);
-flyBypass = fly.addoption("Bypass", Boolean, true);
-noSlowdown = fly.addoption("NoSlowdown", Boolean, true);
-
+// FastFly module options
+fastFlySpeed = fastFly.addoption("Speed", Number, 2);
+fastFlyVerticalSpeed = fastFly.addoption("Vertical Speed", Number, 0.7);
+fastFlyBypass = fastFly.addoption("Bypass", Boolean, true);
+noSlowdown = fastFly.addoption("NoSlowdown", Boolean, true);
 
 
 
