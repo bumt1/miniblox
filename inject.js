@@ -762,56 +762,6 @@ function modifyCode(text) {
 			new Module("KeepSprint", function() {});
 			new Module("NoSlowdown", function() {});
 
-
-
-// TP Aura
-let tpauraRange;
-
-const tpaura = new Module("TPAura", function(callback) {
-    if (callback) {
-        tickLoop["TPAura"] = function() {
-            const entities = game$1.world.entitiesDump;
-            const localPos = player$1.pos.clone();
-
-            for (const entity of entities.values()) {
-                if (entity.id === player$1.id) continue;  // Skip the player itself
-
-                const distance = player$1.getDistanceSqToEntity(entity);
-
-                // If the entity is within range, teleport to it
-                if (distance < (tpauraRange[1] * tpauraRange[1])) {
-                    player$1.setPositionAndRotation(entity.pos.x, entity.pos.y, entity.pos.z, player$1.yaw, player$1.pitch);
-                    
-                    // Bypass technique: Add a slight delay before the next teleport
-                    setTimeout(() => {
-                        // Small random adjustments in position to reduce pattern detection
-                        player$1.setPositionAndRotation(
-                            entity.pos.x + (Math.random() - 0.5) * 0.5,
-                            entity.pos.y,
-                            entity.pos.z + (Math.random() - 0.5) * 0.5,
-                            player$1.yaw, player$1.pitch
-                        );
-                    }, 100 + Math.random() * 200);  // Randomized delay to avoid consistent timing
-
-                    break;  // Teleport to one entity per tick
-                }
-            }
-        };
-    } else {
-        delete tickLoop["TPAura"];  // Cleanup when the module is disabled
-    }
-});
-
-// Add a range option for TPAura
-tpauraRange = tpaura.addoption("Range", Number, 50);  // Default range is 50 units
-
-
-// Dynamic speed adjustment with the .setoption command
-fastflyvalue = fastfly.addoption("Speed", Number, 5);  // Default speed is set to 5
-fastflyvert = fastfly.addoption("Vertical", Number, 0.7);  // Default vertical speed
-
-
-
 			// NoFall
 			new Module("NoFall", function(callback) {
 				if (callback) {
@@ -826,8 +776,6 @@ fastflyvert = fastfly.addoption("Vertical", Number, 0.7);  // Default vertical s
 				}
 				else delete tickLoop["NoFall"];
 			});
-
-
 
 			// Speed
 			let speedvalue, speedjump, speedauto;
@@ -1215,3 +1163,71 @@ fastflyvert = fastfly.addoption("Vertical", Number, 0.7);  // Default vertical s
 		execute(publicUrl);
 	}
 })();
+// Improved Fly with Anti-Cheat Bypass
+let flySpeed, flyVerticalSpeed, flyBypass;
+const fly = new Module("Fly", function (enabled) {
+    if (enabled) {
+        tickLoop["Fly"] = function () {
+            let direction = getMoveDirection(flySpeed[1]);
+            player$1.motion.x = direction.x;
+            player$1.motion.z = direction.z;
+            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
+
+            if (flyBypass[1]) {
+                player$1.motion.x *= 0.98; // reduce motion to avoid anti-cheat detection
+                player$1.motion.z *= 0.98;
+            }
+        };
+    } else {
+        delete tickLoop["Fly"];
+    }
+});
+flySpeed = fly.addoption("Speed", Number, 2);
+flyVerticalSpeed = fly.addoption("Vertical Speed", Number, 0.7);
+flyBypass = fly.addoption("Bypass", Boolean, true);
+
+// FastFly (same as Fly but with a higher speed)
+const fastFly = new Module("FastFly", function (enabled) {
+    if (enabled) {
+        tickLoop["FastFly"] = function () {
+            let direction = getMoveDirection(1.2 * flySpeed[1]); // increase speed multiplier
+            player$1.motion.x = direction.x;
+            player$1.motion.z = direction.z;
+            player$1.motion.y = keyPressedDump("space") ? flyVerticalSpeed[1] : (keyPressedDump("shift") ? -flyVerticalSpeed[1] : 0);
+        };
+    } else {
+        delete tickLoop["FastFly"];
+    }
+});
+
+// TPAura Module
+const tpAura = new Module("TPAura", function (enabled) {
+    if (enabled) {
+        let originalPosition = player$1.pos.clone();
+        tickLoop["TPAura"] = function () {
+            let nearestEnemy = getNearestEnemy();
+            if (nearestEnemy) {
+                player$1.setPositionAndRotation(nearestEnemy.pos.x, nearestEnemy.pos.y, nearestEnemy.pos.z, nearestEnemy.yaw, nearestEnemy.pitch);
+                attackEntity(nearestEnemy);
+                player$1.setPositionAndRotation(originalPosition.x, originalPosition.y, originalPosition.z, player$1.yaw, player$1.pitch);
+            }
+        };
+    } else {
+        delete tickLoop["TPAura"];
+    }
+});
+
+function getNearestEnemy() {
+    let nearestEnemy = null;
+    let minDist = Infinity;
+    for (const entity of game$1.world.entitiesDump.values()) {
+        if (entity != player$1 && entity instanceof EntityPlayer && !entity.isInvisibleDump()) {
+            let dist = player$1.getDistanceSqToEntity(entity);
+            if (dist < minDist) {
+                minDist = dist;
+                nearestEnemy = entity;
+            }
+        }
+    }
+    return nearestEnemy;
+}
