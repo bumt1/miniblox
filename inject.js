@@ -778,69 +778,55 @@ function modifyCode(text) {
 			});
 
 
-// Fast Fly
-new Module("FastFly", function() {});
-let fastflyvalue, fastflyvert;
-let lastPosition;
-let disablePosition;
-
-const fastfly = new Module("FastFly", function(callback) {
+// Fly
+let flyvalue, flyvert, flybypass;
+const fly = new Module("Fly", function(callback) {
     if (callback) {
         let ticks = 0;
-        tickLoop["FastFly"] = function() {
-            ticks++;
+        let isSlowedDown = false; // Variable to toggle slowdown
 
-            // Get the current movement direction with the dynamic speed from fastflyvalue
-            const dir = getMoveDirection(fastflyvalue[1]);
+        tickLoop["Fly"] = function() {
+            ticks++;
+            
+            // Increase base speed for faster flight
+            let speed = flyvalue[1];
+
+            // Every 5 seconds (100 ticks), apply slowdown
+            if (ticks % 100 === 0) {
+                isSlowedDown = true; // Enable slowdown for the next few ticks
+            }
+
+            // Apply slowdown for a short duration (around 20 ticks after every 5 seconds)
+            if (isSlowedDown) {
+                speed *= 0.5; // Halve the speed for the slowdown effect
+                if (ticks % 20 === 0) {
+                    isSlowedDown = false; // Stop slowdown after 20 ticks
+                }
+            }
+
+            // Get the current movement direction with the dynamic speed
+            const dir = getMoveDirection(speed);
             player$1.motion.x = dir.x;
             player$1.motion.z = dir.z;
-            player$1.motion.y = keyPressedDump("space") ? fastflyvert[1] : (keyPressedDump("shift") ? -fastflyvert[1] : 0);
 
-            // Bypass techniques for anti-cheat evasion
-            if (ticks % 5 === 0) {
-                // Slight random changes in motion to prevent pattern detection
-                player$1.motion.x += (Math.random() - 0.5) * 0.05;
-                player$1.motion.z += (Math.random() - 0.5) * 0.05;
-            }
-
-            if (ticks % 30 === 0) {
-                // Randomly pause motion every few ticks to mimic more natural behavior
-                player$1.motion.x *= 0.95;
-                player$1.motion.z *= 0.95;
-            }
+            // Vertical movement controls (space for up, shift for down)
+            player$1.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);
         };
-
-        // Store the player's position when FastFly is enabled
-        lastPosition = { x: player$1.pos.x, y: player$1.pos.y, z: player$1.pos.z };
-
-    } else {
-        // Store the player's position when disabling FastFly
-        disablePosition = { x: player$1.pos.x, y: player$1.pos.y, z: player$1.pos.z };
-
-        // When disabling Fast Fly, make the player stuck for 1 second by locking position
-        const disableTime = Date.now() + 1000;  // 1 second delay
-        tickLoop["FastFlyDisable"] = function() {
-            if (Date.now() < disableTime) {
-                // Teleport the player to the disable position for 1 second
-                player$1.setPositionAndRotation(disablePosition.x, disablePosition.y, disablePosition.z, player$1.yaw, player$1.pitch);
-                player$1.motion.x = 0;
-                player$1.motion.z = 0;
-            } else {
-                // After 1 second, remove the tick loop
-                delete tickLoop["FastFlyDisable"];
-            }
-        };
-
-        // Reset player motion to avoid unnatural large speed after disabling
+    }
+    else {
+        // Reset motion when Fly is disabled
+        delete tickLoop["Fly"];
         if (player$1) {
             player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
             player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
         }
-
-        // Cleanup the tick loop when Fast Fly is disabled
-        delete tickLoop["FastFly"];
     }
 });
+
+// Set options for bypass, speed, and vertical movement
+flybypass = fly.addoption("Bypass", Boolean, true);
+flyvalue = fly.addoption("Speed", Number, 3);  // Increased speed value for faster flight
+flyvert = fly.addoption("Vertical", Number, 1);  // Slightly increased vertical speed
 
 
 			// Speed
