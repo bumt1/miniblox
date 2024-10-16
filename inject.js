@@ -778,18 +778,18 @@ function modifyCode(text) {
 			});
 
 
-// Fly
-let flyvalue, flyvert, flybypass;
-const fly = new Module("Fly", function(callback) {
+// Fast Fly
+let fastflyvalue, fastflyvert, fastflybypass;
+const fastfly = new Module("FastFly", function(callback) {
     if (callback) {
         let ticks = 0;
         let isSlowedDown = false; // Variable to toggle slowdown
 
-        tickLoop["Fly"] = function() {
+        tickLoop["FastFly"] = function() {
             ticks++;
-            
+
             // Increase base speed for faster flight
-            let speed = flyvalue[1];
+            let speed = fastflyvalue[1];
 
             // Every 5 seconds (100 ticks), apply slowdown
             if (ticks % 100 === 0) {
@@ -810,12 +810,11 @@ const fly = new Module("Fly", function(callback) {
             player$1.motion.z = dir.z;
 
             // Vertical movement controls (space for up, shift for down)
-            player$1.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);
+            player$1.motion.y = keyPressedDump("space") ? fastflyvert[1] : (keyPressedDump("shift") ? -fastflyvert[1] : 0);
         };
-    }
-    else {
-        // Reset motion when Fly is disabled
-        delete tickLoop["Fly"];
+    } else {
+        // Reset motion when Fast Fly is disabled
+        delete tickLoop["FastFly"];
         if (player$1) {
             player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
             player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
@@ -824,9 +823,9 @@ const fly = new Module("Fly", function(callback) {
 });
 
 // Set options for bypass, speed, and vertical movement
-flybypass = fly.addoption("Bypass", Boolean, true);
-flyvalue = fly.addoption("Speed", Number, 3);  // Increased speed value for faster flight
-flyvert = fly.addoption("Vertical", Number, 1);  // Slightly increased vertical speed
+fastflybypass = fastfly.addoption("Bypass", Boolean, true);
+fastflyvalue = fastfly.addoption("Speed", Number, 3);  // Increased speed value for faster flight
+fastflyvert = fastfly.addoption("Vertical", Number, 1);  // Slightly increased vertical speed
 
 
 			// Speed
