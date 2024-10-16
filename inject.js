@@ -791,16 +791,16 @@ const fastFly = new Module("FastFly", function(callback) {
             // Base speed for faster flight
             let speed = fastFlySpeed[1];
 
-            // Every 5 seconds (100 ticks), apply slowdown
+            // Every 5 seconds (100 ticks), enable slowdown for 1 second
             if (ticks % 100 === 0) {
-                isSlowedDown = true; // Enable slowdown for the next few ticks
+                isSlowedDown = true; // Trigger slowdown
             }
 
-            // Slowdown logic for 20 ticks (1 second)
+            // Apply slowdown for 20 ticks (1 second)
             if (isSlowedDown) {
-                speed *= 0.5; // Slow down to half speed
+                speed *= 0.5; // Reduce speed by half
                 if (ticks % 20 === 0) {
-                    isSlowedDown = false; // Stop slowdown after 1 second (20 ticks)
+                    isSlowedDown = false; // Disable slowdown after 1 second
                 }
             }
 
