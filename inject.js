@@ -778,9 +778,9 @@ function modifyCode(text) {
 			});
 
 
-// Fast Fly
-let fastflyvalue, fastflyvert, fastflybypass;
-const fastfly = new Module("FastFly", function(callback) {
+// Fast Fly Module
+let fastFlySpeed, fastFlyVertical, fastFlyBypass;
+const fastFly = new Module("FastFly", function(callback) {
     if (callback) {
         let ticks = 0;
         let isSlowedDown = false; // Variable to toggle slowdown
@@ -788,44 +788,46 @@ const fastfly = new Module("FastFly", function(callback) {
         tickLoop["FastFly"] = function() {
             ticks++;
 
-            // Increase base speed for faster flight
-            let speed = fastflyvalue[1];
+            // Base speed for faster flight
+            let speed = fastFlySpeed[1];
 
             // Every 5 seconds (100 ticks), apply slowdown
             if (ticks % 100 === 0) {
                 isSlowedDown = true; // Enable slowdown for the next few ticks
             }
 
-            // Apply slowdown for a short duration (around 20 ticks after every 5 seconds)
+            // Slowdown logic for 20 ticks (1 second)
             if (isSlowedDown) {
-                speed *= 0.5; // Halve the speed for the slowdown effect
+                speed *= 0.5; // Slow down to half speed
                 if (ticks % 20 === 0) {
-                    isSlowedDown = false; // Stop slowdown after 20 ticks
+                    isSlowedDown = false; // Stop slowdown after 1 second (20 ticks)
                 }
             }
 
-            // Get the current movement direction with the dynamic speed
-            const dir = getMoveDirection(speed);
-            player$1.motion.x = dir.x;
-            player$1.motion.z = dir.z;
+            // Get movement direction with the current speed
+            const direction = getMoveDirection(speed);
+            player$1.motion.x = direction.x;
+            player$1.motion.z = direction.z;
 
-            // Vertical movement controls (space for up, shift for down)
-            player$1.motion.y = keyPressedDump("space") ? fastflyvert[1] : (keyPressedDump("shift") ? -fastflyvert[1] : 0);
+            // Control vertical movement (Space for up, Shift for down)
+            player$1.motion.y = keyPressedDump("space") ? fastFlyVertical[1] : (keyPressedDump("shift") ? -fastFlyVertical[1] : 0);
         };
     } else {
-        // Reset motion when Fast Fly is disabled
+        // Stop FastFly when disabled
         delete tickLoop["FastFly"];
+        
         if (player$1) {
+            // Reset motion values to prevent abrupt speed changes
             player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
             player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
         }
     }
 });
 
-// Set options for bypass, speed, and vertical movement
-fastflybypass = fastfly.addoption("Bypass", Boolean, true);
-fastflyvalue = fastfly.addoption("Speed", Number, 3);  // Increased speed value for faster flight
-fastflyvert = fastfly.addoption("Vertical", Number, 1);  // Slightly increased vertical speed
+// Set options for Fast Fly
+fastFlyBypass = fastFly.addoption("Bypass", Boolean, true);
+fastFlySpeed = fastFly.addoption("Speed", Number, 3);  // Increased speed for fast flight
+fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed adjustment
 
 
 			// Speed
