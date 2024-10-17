@@ -837,7 +837,7 @@ const fastFly = new Module("FastFly", function(callback) {
 
 // Set options for Fast Fly
 fastFlyBypass = fastFly.addoption("Bypass", Boolean, true);
-fastFlySpeed = fastFly.addoption("Speed", Number, 3);  // Increased speed for fast flight
+fastFlySpeed = fastFly.addoption("Speed", Number, 2);  // Increased speed for fast flight
 fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed adjustment
 
 
