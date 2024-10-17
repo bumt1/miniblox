@@ -733,30 +733,41 @@ function modifyCode(text) {
 				return new Vector3$1(0, 0, 0);
 			}
 
-			// Fly
 			let flyvalue, flyvert, flybypass;
-			const fly = new Module("Fly", function(callback) {
-				if (callback) {
-					let ticks = 0;
-					tickLoop["Fly"] = function() {
-						ticks++;
-						const dir = getMoveDirection(0.39);
-						player$1.motion.x = dir.x;
-						player$1.motion.z = dir.z;
-						player$1.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);
-					};
-				}
-				else {
-					delete tickLoop["Fly"];
-					if (player$1) {
-						player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
-						player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
-					}
-				}
-			});
-			flybypass = fly.addoption("Bypass", Boolean, true);
-			flyvalue = fly.addoption("Speed", Number, 2);
-			flyvert = fly.addoption("Vertical", Number, 0.7);
+const fly = new Module("Fly", function(callback) {
+    if (callback) {
+        let ticks = 0;
+        tickLoop["Fly"] = function() {
+            ticks++;
+            const dir = getMoveDirection(0.39);
+            player$1.motion.x = dir.x;
+            player$1.motion.z = dir.z;
+            player$1.motion.y = keyPressedDump("space") ? flyvert[1] : (keyPressedDump("shift") ? -flyvert[1] : 0);
+
+            // Send STOP_SLEEPING packet every 5 ticks
+            if (ticks % 5 === 0) {
+                sendStopSleepingPacket();
+            }
+        };
+    }
+    else {
+        delete tickLoop["Fly"];
+        if (player$1) {
+            player$1.motion.x = Math.max(Math.min(player$1.motion.x, 0.3), -0.3);
+            player$1.motion.z = Math.max(Math.min(player$1.motion.z, 0.3), -0.3);
+        }
+    }
+});
+
+// Function to send STOP_SLEEPING packet
+function sendStopSleepingPacket() {
+    // Assuming you have a function to send packets
+    sendPacket("STOP_SLEEPING");
+}
+
+flybypass = fly.addoption("Bypass", Boolean, true);
+flyvalue = fly.addoption("Speed", Number, 2);
+flyvert = fly.addoption("Vertical", Number, 0.7);
 
 			new Module("InvWalk", function() {});
 			new Module("KeepSprint", function() {});
