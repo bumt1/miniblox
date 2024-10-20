@@ -922,7 +922,7 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 			}
 
 
-// ACBYPASS MODULE (1-second Initial Freeze with Teleport during WaitTime)
+// ACBYPASS MODULE (1-second Initial Freeze with Auto-Teleport during WaitTime)
 let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed, acbypassInitialWait;
 let acbypassStartPosition;
 
@@ -960,14 +960,17 @@ const acbypass = new Module("ACBypass", function(callback) {
                     player$1.motion.z = dir.z;
                     player$1.motion.y = keyPressedDump("space") ? acbypassFlySpeed[1] * 2 : (keyPressedDump("shift") ? -acbypassFlySpeed[1] * 2 : 0);
                 } else {
-                    // Wait phase: Teleport the player to the saved position
+                    // Wait phase: Ensure the player stays at the saved position
                     flying = false;
                     player$1.motion.x = 0;
                     player$1.motion.z = 0;
                     player$1.motion.y = 0;
 
-                    // Teleport back to the original position to prevent being moved
-                    player$1.setPosition(acbypassStartPosition.x, acbypassStartPosition.y, acbypassStartPosition.z);
+                    // Check if the player's position has changed
+                    if (player$1.pos.distanceTo(acbypassStartPosition) > 0.1) {
+                        // Teleport back to the original position if moved
+                        player$1.setPosition(acbypassStartPosition.x, acbypassStartPosition.y, acbypassStartPosition.z);
+                    }
                 }
             }
         };
@@ -981,7 +984,6 @@ acbypassFlyTime = acbypass.addoption("FlyTime", Number, 10); // Time flying in t
 acbypassWaitTime = acbypass.addoption("WaitTime", Number, 10); // Time waiting in ticks
 acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 0.8); // Fly speed, doubled to 0.8
 acbypassInitialWait = acbypass.addoption("InitialWait", Number, 20); // Initial freeze time (20 ticks = 1 second)
-
 
 
 			// AutoArmor
