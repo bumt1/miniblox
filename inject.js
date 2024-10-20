@@ -922,30 +922,39 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 			}
 
 
-// ACBYPASS MODULE (Fly Speed Doubled)
-let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed;
+// ACBYPASS MODULE (1-second Initial Wait)
+let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed, acbypassInitialWait;
 const acbypass = new Module("ACBypass", function(callback) {
     if (callback) {
         let flying = false;
         let ticks = 0;
+        let initialWaitDone = false;
 
         tickLoop["ACBypass"] = function() {
             ticks++;
 
-            // Check if we should start or stop flying
-            if (ticks % (acbypassFlyTime[1] + acbypassWaitTime[1]) < acbypassFlyTime[1]) {
-                if (!flying) {
-                    flying = true;
+            // Wait for 1 second before starting the loop
+            if (!initialWaitDone && ticks >= acbypassInitialWait[1]) {
+                initialWaitDone = true;
+                ticks = 0; // Reset ticks after initial wait
+            }
+
+            // Once the initial wait is done, start the fly-wait loop
+            if (initialWaitDone) {
+                if (ticks % (acbypassFlyTime[1] + acbypassWaitTime[1]) < acbypassFlyTime[1]) {
+                    if (!flying) {
+                        flying = true;
+                    }
+                    const dir = getMoveDirection(acbypassFlySpeed[1] * 2); // Double the fly speed
+                    player$1.motion.x = dir.x;
+                    player$1.motion.z = dir.z;
+                    player$1.motion.y = keyPressedDump("space") ? acbypassFlySpeed[1] * 2 : (keyPressedDump("shift") ? -acbypassFlySpeed[1] * 2 : 0);
+                } else {
+                    flying = false;
+                    player$1.motion.x = 0;
+                    player$1.motion.z = 0;
+                    player$1.motion.y = 0;
                 }
-                const dir = getMoveDirection(acbypassFlySpeed[1] * 2); // Double the fly speed
-                player$1.motion.x = dir.x;
-                player$1.motion.z = dir.z;
-                player$1.motion.y = keyPressedDump("space") ? acbypassFlySpeed[1] * 2 : (keyPressedDump("shift") ? -acbypassFlySpeed[1] * 2 : 0);
-            } else {
-                flying = false;
-                player$1.motion.x = 0;
-                player$1.motion.z = 0;
-                player$1.motion.y = 0;
             }
         };
     } else {
@@ -957,6 +966,7 @@ const acbypass = new Module("ACBypass", function(callback) {
 acbypassFlyTime = acbypass.addoption("FlyTime", Number, 10); // Time flying in ticks
 acbypassWaitTime = acbypass.addoption("WaitTime", Number, 10); // Time waiting in ticks
 acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 0.8); // Fly speed, doubled to 0.8
+acbypassInitialWait = acbypass.addoption("InitialWait", Number, 20); // Initial wait time (20 ticks = 1 second)
 
 
 
