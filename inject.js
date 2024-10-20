@@ -975,6 +975,56 @@ acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 0.8); // Fly speed, do
 acbypassInitialWait = acbypass.addoption("InitialWait", Number, 20); // Initial freeze time (20 ticks = 1 second)
 
 
+// ESP MODULE (Enemies Covered in Blue and Visible Through Walls)
+const esp = new Module("ESP", function(callback) {
+    if (callback) {
+        renderTickLoop["ESP"] = function() {
+            const entities = game$1.world.entitiesDump;
+
+            for (const entity of entities.values()) {
+                if (entity instanceof EntityPlayer && entity.id !== player$1.id) {
+                    // Change the color of the enemy to blue and make it visible through walls
+                    entity.mesh.material.color.set(0x0000ff); // Set color to blue
+                    entity.mesh.material.transparent = true;
+                    entity.mesh.material.opacity = 0.5; // Make them slightly transparent
+                    entity.mesh.material.depthTest = false; // Disable depth test to make visible through walls
+                    entity.mesh.renderOrder = 999; // Ensure it renders on top
+                }
+            }
+        };
+    } else {
+        // Disable ESP when the module is turned off
+        delete renderTickLoop["ESP"];
+    }
+});
+
+
+// STUCK MODULE (Player Stuck and Teleports Back if Moved)
+let stuckStartPosition;
+
+const stuck = new Module("Stuck", function(callback) {
+    if (callback) {
+        stuckStartPosition = player$1.pos.clone(); // Save the player's position when the module is enabled
+
+        tickLoop["Stuck"] = function() {
+            // Freeze the player's motion
+            player$1.motion.x = 0;
+            player$1.motion.z = 0;
+            player$1.motion.y = 0;
+
+            // Check if the player's position has changed
+            if (player$1.pos.distanceTo(stuckStartPosition) > 0.1) {
+                // Teleport back to the original position if moved
+                player$1.setPosition(stuckStartPosition.x, stuckStartPosition.y, stuckStartPosition.z);
+            }
+        };
+    } else {
+        // Remove the stuck loop when the module is turned off
+        delete tickLoop["Stuck"];
+    }
+});
+
+
 
 			// AutoArmor
 			function getArmorSlot(armorSlot, slots) {
