@@ -922,8 +922,10 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 			}
 
 
-// ACBYPASS MODULE (1-second Initial Freeze)
+// ACBYPASS MODULE (1-second Initial Freeze with Teleport during WaitTime)
 let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed, acbypassInitialWait;
+let acbypassStartPosition;
+
 const acbypass = new Module("ACBypass", function(callback) {
     if (callback) {
         let flying = false;
@@ -942,11 +944,14 @@ const acbypass = new Module("ACBypass", function(callback) {
                     player$1.motion.y = 0;
                 } else {
                     initialWaitDone = true;
-                    ticks = 0; // Reset ticks after the initial wait is done
+                    ticks = 0; // Reset ticks after initial wait
+                    // Save the player's starting position for teleporting during waitTime
+                    acbypassStartPosition = player$1.pos.clone();
                 }
             } else {
                 // Fly-wait loop
                 if (ticks % (acbypassFlyTime[1] + acbypassWaitTime[1]) < acbypassFlyTime[1]) {
+                    // Flying phase
                     if (!flying) {
                         flying = true;
                     }
@@ -955,10 +960,14 @@ const acbypass = new Module("ACBypass", function(callback) {
                     player$1.motion.z = dir.z;
                     player$1.motion.y = keyPressedDump("space") ? acbypassFlySpeed[1] * 2 : (keyPressedDump("shift") ? -acbypassFlySpeed[1] * 2 : 0);
                 } else {
+                    // Wait phase: Teleport the player to the saved position
                     flying = false;
                     player$1.motion.x = 0;
                     player$1.motion.z = 0;
                     player$1.motion.y = 0;
+
+                    // Teleport back to the original position to prevent being moved
+                    player$1.setPosition(acbypassStartPosition.x, acbypassStartPosition.y, acbypassStartPosition.z);
                 }
             }
         };
