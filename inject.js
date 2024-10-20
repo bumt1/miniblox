@@ -922,7 +922,7 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 			}
 
 
-// ACBYPASS MODULE (1-second Initial Wait)
+// ACBYPASS MODULE (1-second Initial Freeze)
 let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed, acbypassInitialWait;
 const acbypass = new Module("ACBypass", function(callback) {
     if (callback) {
@@ -933,14 +933,19 @@ const acbypass = new Module("ACBypass", function(callback) {
         tickLoop["ACBypass"] = function() {
             ticks++;
 
-            // Wait for 1 second before starting the loop
-            if (!initialWaitDone && ticks >= acbypassInitialWait[1]) {
-                initialWaitDone = true;
-                ticks = 0; // Reset ticks after initial wait
-            }
-
-            // Once the initial wait is done, start the fly-wait loop
-            if (initialWaitDone) {
+            // Freeze the player for 1 second before starting the loop
+            if (!initialWaitDone) {
+                if (ticks < acbypassInitialWait[1]) {
+                    // Freeze the player: stop all motion
+                    player$1.motion.x = 0;
+                    player$1.motion.z = 0;
+                    player$1.motion.y = 0;
+                } else {
+                    initialWaitDone = true;
+                    ticks = 0; // Reset ticks after the initial wait is done
+                }
+            } else {
+                // Fly-wait loop
                 if (ticks % (acbypassFlyTime[1] + acbypassWaitTime[1]) < acbypassFlyTime[1]) {
                     if (!flying) {
                         flying = true;
@@ -966,7 +971,7 @@ const acbypass = new Module("ACBypass", function(callback) {
 acbypassFlyTime = acbypass.addoption("FlyTime", Number, 10); // Time flying in ticks
 acbypassWaitTime = acbypass.addoption("WaitTime", Number, 10); // Time waiting in ticks
 acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 0.8); // Fly speed, doubled to 0.8
-acbypassInitialWait = acbypass.addoption("InitialWait", Number, 20); // Initial wait time (20 ticks = 1 second)
+acbypassInitialWait = acbypass.addoption("InitialWait", Number, 20); // Initial freeze time (20 ticks = 1 second)
 
 
 
