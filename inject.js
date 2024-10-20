@@ -956,7 +956,7 @@ const acbypass = new Module("ACBypass", function(callback) {
 // Setting options for ACBypass
 acbypassFlyTime = acbypass.addoption("FlyTime", Number, 10); // Time flying in ticks
 acbypassWaitTime = acbypass.addoption("WaitTime", Number, 10); // Time waiting in ticks
-acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 0.4); // Fly speed
+acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 1.0); // Fly speed
 
 
 
