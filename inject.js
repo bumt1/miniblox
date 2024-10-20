@@ -921,6 +921,45 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 				return base * stack.stackSize;
 			}
 
+
+// ACBYPASS MODULE
+let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed;
+const acbypass = new Module("ACBypass", function(callback) {
+    if (callback) {
+        let flying = false;
+        let ticks = 0;
+
+        tickLoop["ACBypass"] = function() {
+            ticks++;
+
+            // Check if we should start or stop flying
+            if (ticks % (acbypassFlyTime[1] + acbypassWaitTime[1]) < acbypassFlyTime[1]) {
+                if (!flying) {
+                    flying = true;
+                }
+                const dir = getMoveDirection(acbypassFlySpeed[1]);
+                player$1.motion.x = dir.x;
+                player$1.motion.z = dir.z;
+                player$1.motion.y = keyPressedDump("space") ? acbypassFlySpeed[1] : (keyPressedDump("shift") ? -acbypassFlySpeed[1] : 0);
+            } else {
+                flying = false;
+                player$1.motion.x = 0;
+                player$1.motion.z = 0;
+                player$1.motion.y = 0;
+            }
+        };
+    } else {
+        delete tickLoop["ACBypass"];
+    }
+});
+
+// Setting options for ACBypass
+acbypassFlyTime = acbypass.addoption("FlyTime", Number, 10); // Time flying in ticks
+acbypassWaitTime = acbypass.addoption("WaitTime", Number, 10); // Time waiting in ticks
+acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 0.4); // Fly speed
+
+
+
 			// AutoArmor
 			function getArmorSlot(armorSlot, slots) {
 				let returned = armorSlot;
