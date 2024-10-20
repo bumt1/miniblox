@@ -922,7 +922,7 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 			}
 
 
-// ACBYPASS MODULE
+// ACBYPASS MODULE (Fly Speed Doubled)
 let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed;
 const acbypass = new Module("ACBypass", function(callback) {
     if (callback) {
@@ -937,10 +937,10 @@ const acbypass = new Module("ACBypass", function(callback) {
                 if (!flying) {
                     flying = true;
                 }
-                const dir = getMoveDirection(acbypassFlySpeed[1]);
+                const dir = getMoveDirection(acbypassFlySpeed[1] * 2); // Double the fly speed
                 player$1.motion.x = dir.x;
                 player$1.motion.z = dir.z;
-                player$1.motion.y = keyPressedDump("space") ? acbypassFlySpeed[1] : (keyPressedDump("shift") ? -acbypassFlySpeed[1] : 0);
+                player$1.motion.y = keyPressedDump("space") ? acbypassFlySpeed[1] * 2 : (keyPressedDump("shift") ? -acbypassFlySpeed[1] * 2 : 0);
             } else {
                 flying = false;
                 player$1.motion.x = 0;
@@ -956,7 +956,7 @@ const acbypass = new Module("ACBypass", function(callback) {
 // Setting options for ACBypass
 acbypassFlyTime = acbypass.addoption("FlyTime", Number, 10); // Time flying in ticks
 acbypassWaitTime = acbypass.addoption("WaitTime", Number, 10); // Time waiting in ticks
-acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 1.0); // Fly speed
+acbypassFlySpeed = acbypass.addoption("FlySpeed", Number, 0.8); // Fly speed, doubled to 0.8
 
 
 
