@@ -922,6 +922,36 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 			}
 
 
+   // TPFly MODULE (Teleport Fly)
+let tpflySpeed, tpflyVertical;
+
+const tpfly = new Module("TPFly", function(callback) {
+    if (callback) {
+        tickLoop["TPFly"] = function() {
+            // Get the movement direction based on player input
+            const dir = getMoveDirection(tpflySpeed[1]); // Teleport speed for horizontal movement
+
+            // Determine vertical movement (Space = Up, Shift = Down, no key = no vertical movement)
+            const verticalMovement = keyPressedDump("space") ? tpflyVertical[1] : (keyPressedDump("shift") ? -tpflyVertical[1] : 0);
+
+            // Calculate new teleport position
+            const newPosition = player$1.pos.clone().add(dir.x, verticalMovement, dir.z);
+
+            // Teleport the player to the new position
+            player$1.setPosition(newPosition.x, newPosition.y, newPosition.z);
+        };
+    } else {
+        // Stop teleport fly when the module is disabled
+        delete tickLoop["TPFly"];
+    }
+});
+
+// Setting options for TPFly
+tpflySpeed = tpfly.addoption("Speed", Number, 2); // Horizontal speed (blocks per teleport)
+tpflyVertical = tpfly.addoption("VerticalSpeed", Number, 1); // Vertical speed (blocks per teleport)
+
+
+
 
 // ACBYPASS MODULE (1-second Initial Freeze)
 let acbypassFlyTime, acbypassWaitTime, acbypassFlySpeed, acbypassInitialWait;
