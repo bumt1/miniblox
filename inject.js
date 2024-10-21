@@ -951,14 +951,16 @@ tpflySpeed = tpfly.addoption("Speed", Number, 2); // Horizontal speed (blocks pe
 tpflyVertical = tpfly.addoption("VerticalSpeed", Number, 1); // Vertical speed (blocks per teleport)
 
 
-// BLINKFLY MODULE (Stops Sending Movement Packets Until Disabled)
+// BLINKFLY MODULE (Blink + Fly like in Minecraft Hack Clients)
 let blinkflyPacketBuffer = [];
+let blinkflySpeed, blinkflyVertical;
 
 const blinkfly = new Module("BlinkFly", function(callback) {
     if (callback) {
-        // Enable BlinkFly: Stop sending movement packets and store them in a buffer
+        blinkflyPacketBuffer = []; // Clear the buffer when the module is enabled
+
         tickLoop["BlinkFly"] = function() {
-            // Capture movement packets but don't send them to the server
+            // Store the player's current movement packet, but do not send it to the server
             let movementPacket = new SPacketPlayerPosLook({
                 pos: { x: player$1.pos.x, y: player$1.pos.y, z: player$1.pos.z },
                 yaw: player$1.yaw,
@@ -966,20 +968,20 @@ const blinkfly = new Module("BlinkFly", function(callback) {
                 onGround: player$1.onGround
             });
 
-            blinkflyPacketBuffer.push(movementPacket); // Add the packet to the buffer
+            blinkflyPacketBuffer.push(movementPacket); // Add movement packets to the buffer
 
-            // Move the player client-side (fly functionality)
-            const dir = getMoveDirection(blinkflySpeed[1]); // Direction with specified fly speed
+            // Allow the player to fly client-side without sending updates to the server
+            const dir = getMoveDirection(blinkflySpeed[1]); // Fly with the set speed
             player$1.motion.x = dir.x;
             player$1.motion.z = dir.z;
             player$1.motion.y = keyPressedDump("space") ? blinkflyVertical[1] : (keyPressedDump("shift") ? -blinkflyVertical[1] : 0);
         };
     } else {
-        // Disable BlinkFly: Send all buffered packets to the server
+        // Send all buffered movement packets when the module is disabled (Blink effect)
         for (let packet of blinkflyPacketBuffer) {
-            ClientSocket.sendPacket(packet); // Send each buffered packet
+            ClientSocket.sendPacket(packet); // Send each buffered packet to the server
         }
-        blinkflyPacketBuffer = []; // Clear the packet buffer
+        blinkflyPacketBuffer = []; // Clear the buffer after sending
 
         // Stop the BlinkFly loop
         delete tickLoop["BlinkFly"];
@@ -987,8 +989,8 @@ const blinkfly = new Module("BlinkFly", function(callback) {
 });
 
 // Setting options for BlinkFly
-let blinkflySpeed = blinkfly.addoption("Speed", Number, 1.5); // Fly speed while blinking
-let blinkflyVertical = blinkfly.addoption("VerticalSpeed", Number, 1); // Vertical movement speed
+blinkflySpeed = blinkfly.addoption("Speed", Number, 0.8); // Same speed as regular fly
+blinkflyVertical = blinkfly.addoption("VerticalSpeed", Number, 0.7); // Vertical movement speed
 
 
 
