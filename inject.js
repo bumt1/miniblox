@@ -951,6 +951,46 @@ tpflySpeed = tpfly.addoption("Speed", Number, 2); // Horizontal speed (blocks pe
 tpflyVertical = tpfly.addoption("VerticalSpeed", Number, 1); // Vertical speed (blocks per teleport)
 
 
+// BLINKFLY MODULE (Stops Sending Movement Packets Until Disabled)
+let blinkflyPacketBuffer = [];
+
+const blinkfly = new Module("BlinkFly", function(callback) {
+    if (callback) {
+        // Enable BlinkFly: Stop sending movement packets and store them in a buffer
+        tickLoop["BlinkFly"] = function() {
+            // Capture movement packets but don't send them to the server
+            let movementPacket = new SPacketPlayerPosLook({
+                pos: { x: player$1.pos.x, y: player$1.pos.y, z: player$1.pos.z },
+                yaw: player$1.yaw,
+                pitch: player$1.pitch,
+                onGround: player$1.onGround
+            });
+
+            blinkflyPacketBuffer.push(movementPacket); // Add the packet to the buffer
+
+            // Move the player client-side (fly functionality)
+            const dir = getMoveDirection(blinkflySpeed[1]); // Direction with specified fly speed
+            player$1.motion.x = dir.x;
+            player$1.motion.z = dir.z;
+            player$1.motion.y = keyPressedDump("space") ? blinkflyVertical[1] : (keyPressedDump("shift") ? -blinkflyVertical[1] : 0);
+        };
+    } else {
+        // Disable BlinkFly: Send all buffered packets to the server
+        for (let packet of blinkflyPacketBuffer) {
+            ClientSocket.sendPacket(packet); // Send each buffered packet
+        }
+        blinkflyPacketBuffer = []; // Clear the packet buffer
+
+        // Stop the BlinkFly loop
+        delete tickLoop["BlinkFly"];
+    }
+});
+
+// Setting options for BlinkFly
+let blinkflySpeed = blinkfly.addoption("Speed", Number, 1.5); // Fly speed while blinking
+let blinkflyVertical = blinkfly.addoption("VerticalSpeed", Number, 1); // Vertical movement speed
+
+
 
 
 // ACBYPASS MODULE (1-second Initial Freeze)
