@@ -921,6 +921,34 @@ fastFlyVertical = fastFly.addoption("Vertical", Number, 1);  // Vertical speed a
 				return base * stack.stackSize;
 			}
 
+// ANTITELEPORT MODULE (Prevents Server from Teleporting Player Back)
+let antiTeleportSavedPosition;
+
+const antiTeleport = new Module("AntiTeleport", function(callback) {
+    if (callback) {
+        // Save the player's current position to track for unwanted teleports
+        antiTeleportSavedPosition = player$1.pos.clone();
+
+        tickLoop["AntiTeleport"] = function() {
+            // Check if the player's position has been forcefully changed by the server
+            if (player$1.pos.distanceTo(antiTeleportSavedPosition) > 1.0) { // If the player is moved by more than 1 block
+                // Teleport the player back to the saved position
+                player$1.setPosition(antiTeleportSavedPosition.x, antiTeleportSavedPosition.y, antiTeleportSavedPosition.z);
+            } else {
+                // Keep updating the saved position if the player moves naturally
+                antiTeleportSavedPosition = player$1.pos.clone();
+            }
+        };
+    } else {
+        // Disable the AntiTeleport functionality
+        delete tickLoop["AntiTeleport"];
+    }
+});
+
+
+
+
+
 
    // TPFly MODULE (Teleport Fly)
 let tpflySpeed, tpflyVertical;
