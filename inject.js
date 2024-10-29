@@ -1021,6 +1021,48 @@ blinkflySpeed = blinkfly.addoption("Speed", Number, 0.8); // Same speed as regul
 blinkflyVertical = blinkfly.addoption("VerticalSpeed", Number, 0.7); // Vertical movement speed
 
 
+// JumpFly Module
+let jumpFlySpeed, jumpFlyVertical, jumpFlyBypass;
+const jumpFly = new Module("JumpFly", function(callback) {
+    if (callback) {
+        let isJumping = false;
+
+        tickLoop["JumpFly"] = function() {
+            // Check if the player is pressing the jump key (space)
+            if (keyPressedDump("space")) {
+                // If jump is pressed, apply upward motion for flying
+                player$1.motion.y = jumpFlyVertical[1];
+                isJumping = true;
+            } else if (isJumping) {
+                // When space is released, keep player floating at the current height
+                player$1.motion.y = 0;
+                isJumping = false;
+            }
+
+            // Forward movement while flying
+            const direction = getMoveDirection(jumpFlySpeed[1]);
+            player$1.motion.x = direction.x;
+            player$1.motion.z = direction.z;
+        };
+    } else {
+        // Stop JumpFly when disabled
+        delete tickLoop["JumpFly"];
+
+        if (player$1) {
+            // Reset motion values to prevent abrupt movement changes
+            player$1.motion.x = 0;
+            player$1.motion.y = 0;
+            player$1.motion.z = 0;
+        }
+    }
+});
+
+// Set options for JumpFly
+jumpFlyBypass = jumpFly.addoption("Bypass", Boolean, true);
+jumpFlySpeed = jumpFly.addoption("Speed", Number, 1);     // Forward movement speed for flying
+jumpFlyVertical = jumpFly.addoption("Vertical", Number, 0.6);  // Upward speed adjustment for flying
+
+
 
 
 // ACBYPASS MODULE (1-second Initial Freeze)
